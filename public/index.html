@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smarter Daily Schedule - Productivity & Exam Prep Tracker</title>
+  <meta name="description" content="A modern, intelligent daily schedule web application with live time tracking, countdown calculations, task completion checkmarks, and MongoDB persistence.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>⏱️</text></svg>">
+</head>
+<body class="light-theme">
+  <!-- Background ambient gradient shapes -->
+  <div class="bg-shape shape-1" aria-hidden="true"></div>
+  <div class="bg-shape shape-2" aria-hidden="true"></div>
+  <div class="bg-shape shape-3" aria-hidden="true"></div>
+
+  <div class="app-wrapper">
+    <!-- Top Bar with Live Clock and Actions -->
+    <header class="top-bar">
+      <div class="brand-zone">
+        <div class="logo-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div>
+          <div class="app-subtitle">Daily Routine & Task Planner</div>
+          <div class="live-datetime" id="liveDateTime">
+            <span id="currentDateText">Loading date...</span>
+            <span class="dot-separator">•</span>
+            <span id="currentTimeText" class="mono-time">--:--:--</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <div class="db-status-pill" id="dbStatusBadge" title="MongoDB Connection Status">
+          <span class="status-indicator"></span>
+          <span class="status-text" id="dbStatusText">Checking DB...</span>
+        </div>
+
+        <button class="icon-btn" id="soundToggleBtn" title="Toggle Completion Sound" aria-label="Toggle completion sound">
+          <span id="soundIcon">🔔</span>
+        </button>
+
+        <button class="btn btn-secondary" id="resetDayBtn" title="Uncheck all tasks for a fresh day">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+            <path d="M3 3v5h5"></path>
+          </svg>
+          Reset Day
+        </button>
+
+        <button class="btn btn-primary" id="openAddModalBtn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <line x1="12" y1="5" x2="12" y2="19"></line>
+            <line x1="5" y1="12" x2="19" y2="12"></line>
+          </svg>
+          Add Task
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Header replicating the image banner in elegant white aesthetic -->
+    <section class="schedule-hero-card">
+      <div class="hero-header">
+        <h1 class="main-title">SMARTER DAILY SCHEDULE</h1>
+        <div class="hero-chips">
+          <div class="hero-chip chip-internship">
+            <span class="chip-dot"></span>
+            <span>Internship (8:30 AM - 4:30 PM)</span>
+          </div>
+          <span class="chip-divider">|</span>
+          <div class="hero-chip chip-prep">
+            <span class="chip-dot"></span>
+            <span>Final Exam Prep</span>
+          </div>
+          <span class="chip-divider">|</span>
+          <div class="hero-chip chip-sleep">
+            <span class="chip-dot"></span>
+            <span>12:00 AM Sleep</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Real-time Calculations & Progress Stats Dashboard -->
+    <section class="metrics-grid">
+      <!-- Active Task Live Countdown Box -->
+      <div class="metric-card active-task-card" id="activeTaskCard">
+        <div class="card-label-row">
+          <span class="pulse-live-badge">
+            <span class="pulsing-dot"></span>
+            <span id="activeBadgeText">ACTIVE NOW</span>
+          </span>
+          <span class="card-subtext" id="activeTimeRange">--</span>
+        </div>
+        <div class="active-task-info">
+          <h2 class="active-task-name" id="activeTaskName">Scanning current time...</h2>
+          <p class="active-task-desc" id="activeTaskDesc">Matching schedule with your device clock</p>
+        </div>
+        <div class="active-task-footer">
+          <div class="countdown-display">
+            <span class="countdown-label">Time Remaining:</span>
+            <span class="countdown-digits mono-time" id="activeCountdownDigits">--m --s</span>
+          </div>
+          <div class="countdown-bar-wrap">
+            <div class="countdown-bar-fill" id="activeCountdownBar" style="width: 0%"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Total Scheduled & Completed Time Calculation -->
+      <div class="metric-card stat-metric">
+        <div class="stat-top">
+          <div class="stat-icon-wrap icon-time">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
+          </div>
+          <span class="stat-pill-label">Time Calculations</span>
+        </div>
+        <div class="stat-values">
+          <div class="stat-main-num" id="completedTimeDisplay">0h 00m</div>
+          <div class="stat-caption">Completed of <span id="totalScheduledTimeDisplay" class="font-bold">24h 00m</span> planned</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill fill-blue" id="timeProgressFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Tasks Completed Progress Counter -->
+      <div class="metric-card stat-metric">
+        <div class="stat-top">
+          <div class="stat-icon-wrap icon-check">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+              <polyline points="22 4 12 14.01 9 11.01"></polyline>
+            </svg>
+          </div>
+          <span class="stat-pill-label">Tasks Progress</span>
+        </div>
+        <div class="stat-values">
+          <div class="stat-main-num" id="tasksRatioDisplay">0 / 0</div>
+          <div class="stat-caption"><span id="percentTasksDisplay" class="font-bold">0%</span> daily goals completed</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill fill-green" id="tasksProgressFill" style="width: 0%"></div>
+        </div>
+      </div>
+
+      <!-- Time Remaining Calculation -->
+      <div class="metric-card stat-metric">
+        <div class="stat-top">
+          <div class="stat-icon-wrap icon-remaining">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 22h14"></path>
+              <path d="M5 2h14"></path>
+              <path d="M17 22v-4.172a2 2 0 0 0-.586-1.414L12 12l-4.414 4.414A2 2 0 0 0 7 17.828V22"></path>
+              <path d="M7 2v4.172a2 2 0 0 0 .586 1.414L12 12l4.414-4.414A2 2 0 0 0 17 6.172V2"></path>
+            </svg>
+          </div>
+          <span class="stat-pill-label">Time Remaining</span>
+        </div>
+        <div class="stat-values">
+          <div class="stat-main-num" id="remainingTimeDisplay">24h 00m</div>
+          <div class="stat-caption">Remaining tasks left to finish</div>
+        </div>
+        <div class="progress-track">
+          <div class="progress-fill fill-purple" id="remainingProgressFill" style="width: 100%"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filter and Quick Controls -->
+    <div class="control-ribbon">
+      <div class="category-filters" role="tablist">
+        <button class="filter-tab active" data-category="all" role="tab" aria-selected="true">
+          All Blocks <span class="tab-badge" id="badgeAllCount">12</span>
+        </button>
+        <button class="filter-tab tab-morning" data-category="morning" role="tab" aria-selected="false">
+          <span class="tab-color-dot dot-morning"></span> Morning Routine <span class="tab-badge" id="badgeMorningCount">3</span>
+        </button>
+        <button class="filter-tab tab-internship" data-category="internship" role="tab" aria-selected="false">
+          <span class="tab-color-dot dot-internship"></span> Internship & Work <span class="tab-badge" id="badgeInternshipCount">2</span>
+        </button>
+        <button class="filter-tab tab-evening" data-category="evening" role="tab" aria-selected="false">
+          <span class="tab-color-dot dot-evening"></span> Evening & Study <span class="tab-badge" id="badgeEveningCount">7</span>
+        </button>
+      </div>
+
+      <div class="ribbon-right">
+        <button class="text-link-btn" id="restoreDefaultsBtn" title="Reset all tasks to original layout from image">
+          Restore Image Template
+        </button>
+      </div>
+    </div>
+
+    <!-- Main Schedule Grid Layout (2-Column structure matching the image) -->
+    <main class="schedule-grid" id="scheduleGrid">
+      <!-- Column 1: Morning Routine & Internship -->
+      <div class="schedule-col col-left" id="colLeft">
+        <!-- Morning Section Container -->
+        <section class="schedule-section section-morning" id="sectionMorning">
+          <div class="section-banner banner-morning">
+            <div class="banner-title-wrap">
+              <span class="banner-icon">☀️</span>
+              <h2 class="banner-heading">MORNING ROUTINE & FITNESS (06:30 AM - 08:00 AM)</h2>
+            </div>
+            <div class="banner-time-sum" id="morningDurationSum">1h 30m</div>
+          </div>
+          <div class="tasks-container" id="morningTasksList">
+            <!-- Dynamic task cards injected via JS -->
+          </div>
+        </section>
+
+        <!-- Internship Section Container -->
+        <section class="schedule-section section-internship" id="sectionInternship">
+          <div class="section-banner banner-internship">
+            <div class="banner-title-wrap">
+              <span class="banner-icon">💼</span>
+              <h2 class="banner-heading">INTERNSHIP & WORK HOURS (08:30 AM - 04:30 PM)</h2>
+            </div>
+            <div class="banner-time-sum" id="internshipDurationSum">8h 00m</div>
+          </div>
+          <div class="tasks-container" id="internshipTasksList">
+            <!-- Dynamic task cards injected via JS -->
+          </div>
+        </section>
+      </div>
+
+      <!-- Column 2: Evening, Final Exam Prep & Wind Down -->
+      <div class="schedule-col col-right" id="colRight">
+        <section class="schedule-section section-evening" id="sectionEvening">
+          <div class="section-banner banner-evening">
+            <div class="banner-title-wrap">
+              <span class="banner-icon">🌙</span>
+              <h2 class="banner-heading">EVENING, FINAL EXAM PREP & WIND DOWN (04:30 PM - 12:00 AM)</h2>
+            </div>
+            <div class="banner-time-sum" id="eveningDurationSum">14h 00m</div>
+          </div>
+          <div class="tasks-container" id="eveningTasksList">
+            <!-- Dynamic task cards injected via JS -->
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Executive Professional Footer -->
+    <footer class="pro-footer">
+      <!-- Motivational Executive Banner Card -->
+      <div class="footer-motto-card">
+        <div class="motto-accent-bar"></div>
+        <div class="motto-body">
+          <div class="motto-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+          </div>
+          <div class="motto-text-group">
+            <h3 class="motto-headline">Stay consistent, get enough rest, and ace your Final Exams!</h3>
+            <p class="motto-subtext">Research-backed daily rhythm: 1.5h Morning Routine &bull; 8h Software Engineering Internship &bull; 4h 45m Focused Exam Prep &bull; 6.5h Restorative Sleep</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer Columns Grid -->
+      <div class="footer-columns-grid">
+        <!-- Column 1: Brand & Status -->
+        <div class="footer-col brand-col">
+          <div class="footer-brand">
+            <div class="footer-logo">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <span class="footer-brand-name">SMARTER DAILY SCHEDULER</span>
+          </div>
+          <p class="footer-desc">
+            An intelligent, time-calculated routine manager engineered for software engineering interns, exam candidates, and high performers.
+          </p>
+          <div class="footer-status-pill">
+            <span class="status-indicator-live"></span>
+            <span>MongoDB Local Persistence &bull; 100% Privacy</span>
+          </div>
+        </div>
+
+        <!-- Column 2: Architecture Pillars -->
+        <div class="footer-col">
+          <h4 class="footer-col-title">SCHEDULE ARCHITECTURE</h4>
+          <ul class="footer-links-list">
+            <li>
+              <span class="dot-indicator dot-morning"></span>
+              <span>Morning Routine & Fitness (06:30 - 08:00 AM)</span>
+            </li>
+            <li>
+              <span class="dot-indicator dot-internship"></span>
+              <span>Software Engineering Internship (08:30 AM - 04:30 PM)</span>
+            </li>
+            <li>
+              <span class="dot-indicator dot-evening"></span>
+              <span>3-Block Exam Prep & Revision (05:30 - 11:30 PM)</span>
+            </li>
+            <li>
+              <span class="dot-indicator dot-evening"></span>
+              <span>Restorative Deep Sleep (12:00 AM - 06:30 AM)</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Column 3: Productivity Tools -->
+        <div class="footer-col actions-col">
+          <h4 class="footer-col-title">PRODUCTIVITY UTILITIES</h4>
+          <div class="footer-actions-group">
+            <button class="footer-action-btn" id="printScheduleBtn" title="Print or save as PDF">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 6 2 18 2 18 9"></polyline>
+                <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+                <rect x="6" y="14" width="12" height="8"></rect>
+              </svg>
+              Print / Save as PDF
+            </button>
+            <button class="footer-action-btn" id="scrollToTopBtn" title="Scroll to top of schedule">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="12" y1="19" x2="12" y2="5"></line>
+                <polyline points="5 12 12 5 19 12"></polyline>
+              </svg>
+              Back to Top
+            </button>
+          </div>
+          <p class="privacy-note">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+              <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+            </svg>
+            All daily metrics are stored securely in your MongoDB instance.
+          </p>
+        </div>
+      </div>
+
+      <!-- Bottom Bar -->
+      <div class="footer-bottom-bar">
+        <div class="copyright-text">
+          &copy; 2026 Smarter Daily Scheduler &bull; Designed for Peak Academic & Career Performance
+        </div>
+        <div class="tech-pills">
+          <span class="tech-pill">HTML5</span>
+          <span class="tech-pill">CSS3</span>
+          <span class="tech-pill">Vanilla JS</span>
+          <span class="tech-pill">Node.js</span>
+          <span class="tech-pill">Express</span>
+          <span class="tech-pill">MongoDB</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Modal for Adding / Editing Task -->
+  <div class="modal-overlay" id="taskModal" aria-hidden="true">
+    <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-header">
+        <h3 id="modalTitle">Add Schedule Task</h3>
+        <button class="modal-close-btn" id="closeModalBtn" aria-label="Close modal">&times;</button>
+      </div>
+      <form id="taskForm" class="modal-form">
+        <input type="hidden" id="taskIdInput">
+
+        <div class="form-group">
+          <label for="taskTitleInput">Task Title *</label>
+          <input type="text" id="taskTitleInput" required placeholder="e.g. Study Block 2 (Past Papers)">
+        </div>
+
+        <div class="form-group">
+          <label for="taskDescInput">Description / Instructions</label>
+          <input type="text" id="taskDescInput" placeholder="e.g. Past paper questions, active recall & problem solving">
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskCategorySelect">Section / Category *</label>
+            <select id="taskCategorySelect" required>
+              <option value="morning">Morning Routine & Fitness</option>
+              <option value="internship">Internship & Work Hours</option>
+              <option value="evening">Evening, Final Exam Prep & Wind Down</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="taskTimeRangeInput">Display Time Range *</label>
+            <input type="text" id="taskTimeRangeInput" required placeholder="e.g. 08:30 PM - 10:15 PM">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="taskStartTimeInput">Start Time (24h HH:MM)</label>
+            <input type="time" id="taskStartTimeInput">
+          </div>
+
+          <div class="form-group">
+            <label for="taskEndTimeInput">End Time (24h HH:MM)</label>
+            <input type="time" id="taskEndTimeInput">
+          </div>
+
+          <div class="form-group">
+            <label for="taskDurationInput">Duration (Minutes)</label>
+            <input type="number" id="taskDurationInput" min="0" placeholder="e.g. 105">
+          </div>
+        </div>
+
+        <div class="form-checkbox-row">
+          <label class="checkbox-label-inline">
+            <input type="checkbox" id="taskIsAllDayInput">
+            <span>Mark as All-Day Habit (no fixed end timer)</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" id="cancelModalBtn">Cancel</button>
+          <button type="submit" class="btn btn-primary" id="saveTaskSubmitBtn">Save Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- Confetti Canvas -->
+  <canvas id="confettiCanvas" class="confetti-canvas"></canvas>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
