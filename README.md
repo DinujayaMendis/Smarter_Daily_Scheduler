@@ -41,6 +41,16 @@ A modern, high-performance daily schedule web application built with **HTML5**, 
    - "Reset Day" button to uncheck all tasks for a fresh morning.
    - "Restore Image Template" button to reset everything back to the original schedule.
 
+7. **📊 Visual Analytics & Reports Dashboard (`analytics.html`)**:
+   - **Timeframe Filtering**: Seamlessly toggle between **Daily**, **Weekly (7 Days)**, and **Monthly (30 Days)** views.
+   - **Interactive Charts (powered by Chart.js 4.4)**:
+     - 📈 **Hours Tracked vs Scheduled**: Combo Bar and Line chart showing daily execution volume.
+     - 🍩 **Time Allocation Donut**: Visual routine share across Morning, Internship, Exam Prep, and Sleep pillars.
+     - 📊 **Exam Prep Intensity Breakdown**: Stacked bar chart for Core Theory, Past Papers, and Labs/Revision.
+     - 📉 **Completion Rate Trend**: Smooth area line chart tracking consistency against high-performance goals.
+   - **Schedule Consistency Matrix**: Comprehensive adherence table displaying task completion frequencies and badges.
+   - **One-Click Export**: Print or save comprehensive analytical reports as clean PDFs.
+
 ---
 
 ## 🚀 Getting Started

@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analytics & Performance Dashboard - Smarter Daily Scheduler</title>
+  <meta name="description" content="Visual analytics, weekly and monthly study/work hours breakdown, and routine consistency tracking.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <link rel="stylesheet" href="css/analytics.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📊</text></svg>">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body class="light-theme">
+  <!-- Ambient background shapes -->
+  <div class="bg-shape shape-1" aria-hidden="true"></div>
+  <div class="bg-shape shape-2" aria-hidden="true"></div>
+  <div class="bg-shape shape-3" aria-hidden="true"></div>
+
+  <div class="app-wrapper">
+    <!-- Top Navigation Bar -->
+    <header class="top-bar">
+      <div class="brand-zone">
+        <a href="index.html" class="back-link-btn" title="Return to Schedule Grid">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+          Back to Schedule
+        </a>
+        <div class="analytics-brand-divider"></div>
+        <div>
+          <div class="app-subtitle">Executive Performance Intelligence</div>
+          <div class="analytics-page-title">Productivity & Routine Analytics</div>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <!-- Timeframe Switcher Tabs -->
+        <div class="period-switcher-group" role="tablist">
+          <button class="period-tab" data-period="daily" role="tab" aria-selected="false">Daily</button>
+          <button class="period-tab active" data-period="weekly" role="tab" aria-selected="true">Weekly (7 Days)</button>
+          <button class="period-tab" data-period="monthly" role="tab" aria-selected="false">Monthly (30 Days)</button>
+        </div>
+
+        <button class="btn btn-secondary" id="printReportBtn" title="Print or save analytics as PDF">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="6 9 6 2 18 2 18 9"></polyline>
+            <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>
+            <rect x="6" y="14" width="12" height="8"></rect>
+          </svg>
+          Export Report
+        </button>
+      </div>
+    </header>
+
+    <!-- Hero Header Banner -->
+    <section class="analytics-hero-card">
+      <div class="hero-left">
+        <span class="analytics-badge-pill">
+          <span class="live-dot-green"></span>
+          REAL-TIME ANALYTICS ENGINE
+        </span>
+        <h1 class="hero-heading" id="periodTitle">Weekly Productivity & Focus Intelligence</h1>
+        <p class="hero-description" id="periodSubtitle">
+          Tracking time distribution across Software Engineering Internship, Core Exam Theory, Past Paper Practice, and Morning Fitness.
+        </p>
+      </div>
+      <div class="hero-right">
+        <div class="hero-score-box">
+          <div class="hero-score-label">Overall Completion Rate</div>
+          <div class="hero-score-val mono-time" id="heroCompletionRate">--%</div>
+          <div class="hero-score-sub" id="heroAnalyzedDays">Analyzed: 7 Days</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Key Metrics Highlight Grid (4 Cards) -->
+    <section class="analytics-metrics-grid">
+      <!-- 1. Total Productive Hours -->
+      <div class="analytics-card metric-box">
+        <div class="box-icon icon-hours">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <polyline points="12 6 12 12 16 14"></polyline>
+          </svg>
+        </div>
+        <div class="box-content">
+          <span class="box-label">TOTAL HOURS LOGGED</span>
+          <div class="box-val mono-time" id="statTotalHours">-- hrs</div>
+          <div class="box-sub">Planned: <span id="statScheduledHours" class="font-bold">-- hrs</span></div>
+        </div>
+      </div>
+
+      <!-- 2. Exam Study Blocks Time -->
+      <div class="analytics-card metric-box">
+        <div class="box-icon icon-study">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          </svg>
+        </div>
+        <div class="box-content">
+          <span class="box-label">EXAM PREPARATION TIME</span>
+          <div class="box-val mono-time" id="statStudyHours">-- hrs</div>
+          <div class="box-sub">Core Theory &bull; Past Papers &bull; Labs</div>
+        </div>
+      </div>
+
+      <!-- 3. Internship Hours -->
+      <div class="analytics-card metric-box">
+        <div class="box-icon icon-internship">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+            <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+          </svg>
+        </div>
+        <div class="box-content">
+          <span class="box-label">INTERNSHIP & WORK</span>
+          <div class="box-val mono-time" id="statInternshipHours">-- hrs</div>
+          <div class="box-sub">Focused Software Engineering</div>
+        </div>
+      </div>
+
+      <!-- 4. Consistency Streak -->
+      <div class="analytics-card metric-box">
+        <div class="box-icon icon-streak">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+        </div>
+        <div class="box-content">
+          <span class="box-label">EXECUTION STREAK</span>
+          <div class="box-val mono-time" id="statStreak">14 Days</div>
+          <div class="box-sub">Continuous daily consistency 🔥</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Primary Charts Row (Hours Comparison + Donut Distribution) -->
+    <section class="charts-row primary-charts-row">
+      <!-- Chart 1: Tracked vs Scheduled Hours -->
+      <div class="analytics-card chart-card chart-large">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Hours Tracked vs Scheduled</h3>
+            <p class="chart-subtitle">Daily execution volume compared with the 24-hour routine blueprint</p>
+          </div>
+          <div class="chart-legend-custom">
+            <span class="legend-item"><span class="legend-dot dot-completed"></span> Completed Hours</span>
+            <span class="legend-item"><span class="legend-dot dot-scheduled"></span> Planned Routine</span>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 320px;">
+          <canvas id="hoursComparisonChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 2: Time Allocation by Routine Category -->
+      <div class="analytics-card chart-card chart-side">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Time Allocation</h3>
+            <p class="chart-subtitle">Routine share across pillars</p>
+          </div>
+        </div>
+        <div class="chart-container donut-wrap" style="height: 250px;">
+          <canvas id="categoryDonutChart"></canvas>
+        </div>
+        <div class="category-breakdown-legend" id="categoryLegendList">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Secondary Charts Row (Study Intensity + Daily Completion Trend) -->
+    <section class="charts-row secondary-charts-row">
+      <!-- Chart 3: Exam Study Intensity Breakdown -->
+      <div class="analytics-card chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Exam Prep Intensity Breakdown</h3>
+            <p class="chart-subtitle">Daily hours across Theory, Past Paper Practice, and Labs/Revision</p>
+          </div>
+          <div class="chart-legend-custom">
+            <span class="legend-item"><span class="legend-dot dot-theory"></span> Block 1 (Theory)</span>
+            <span class="legend-item"><span class="legend-dot dot-papers"></span> Block 2 (Past Papers)</span>
+            <span class="legend-item"><span class="legend-dot dot-revision"></span> Block 3 (Labs/Revision)</span>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+          <canvas id="studyIntensityChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Chart 4: Daily Completion Rate Trend -->
+      <div class="analytics-card chart-card">
+        <div class="chart-header">
+          <div>
+            <h3 class="chart-title">Completion Rate Trend (%)</h3>
+            <p class="chart-subtitle">Daily adherence score against 85% high-performance threshold</p>
+          </div>
+        </div>
+        <div class="chart-container" style="height: 280px;">
+          <canvas id="completionTrendChart"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- Task Consistency Performance Table -->
+    <section class="analytics-card table-card">
+      <div class="table-header">
+        <div>
+          <h3 class="chart-title">Schedule Consistency Matrix</h3>
+          <p class="chart-subtitle">Task adherence and completion frequency based on your daily schedule</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="analytics-table">
+          <thead>
+            <tr>
+              <th>Task & Focus Area</th>
+              <th>Category</th>
+              <th>Scheduled Time Window</th>
+              <th>Allocated Duration</th>
+              <th>Adherence Rate</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="consistencyTableBody">
+            <!-- Dynamic rows injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- Professional Footer Matching Main Page -->
+    <footer class="pro-footer">
+      <div class="footer-motto-card">
+        <div class="motto-accent-bar"></div>
+        <div class="motto-body">
+          <div class="motto-icon-wrap">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"></circle>
+              <path d="m9 12 2 2 4-4"></path>
+            </svg>
+          </div>
+          <div class="motto-text-group">
+            <h3 class="motto-headline">Stay consistent, get enough rest, and ace your Final Exams!</h3>
+            <p class="motto-subtext">Analytics verify that daily execution consistency is the #1 predictor of exam readiness and professional internship mastery.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom-bar">
+        <div class="copyright-text">
+          &copy; 2026 Smarter Daily Scheduler &bull; Analytics & Performance Intelligence Module
+        </div>
+        <div class="tech-pills">
+          <span class="tech-pill">Chart.js 4.4</span>
+          <span class="tech-pill">MongoDB Aggregates</span>
+          <span class="tech-pill">HTML5 Canvas</span>
+          <span class="tech-pill">Vercel Ready</span>
+        </div>
+      </div>
+    </footer>
+  </div>
+
+  <script src="js/analytics.js"></script>
+</body>
+</html>
