@@ -1246,15 +1246,14 @@ body {
 
 /* Bottom Bar */
 .footer-bottom-bar {
-  padding: 18px 24px;
+  padding: 16px 24px;
   border-radius: var(--radius-md);
   background: #ffffff;
   border: 1px solid var(--border-subtle);
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
+  justify-content: center;
+  text-align: center;
 }
 
 .copyright-text {
