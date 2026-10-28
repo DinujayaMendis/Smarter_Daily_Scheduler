@@ -73,6 +73,40 @@ http://localhost:3000
 
 ---
 
+## ⚡ Deploying to Vercel (Production)
+
+This project is pre-configured for seamless **Vercel Serverless** deployment via `vercel.json` and `api/index.js`.
+
+### Step 1: Set Up MongoDB Atlas (Cloud Database)
+Since Vercel runs in the cloud, it cannot connect to your local `127.0.0.1:27017`. You need a free cloud MongoDB:
+1. Go to [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) and create a free account.
+2. Create a free **M0 Shared Cluster**.
+3. Under **Database Access**, create a user (username & password).
+4. Under **Network Access**, click **Add IP Address** and choose **Allow Access From Anywhere** (`0.0.0.0/0`).
+5. Click **Connect** &rarr; **Drivers** and copy your connection string:
+   ```
+   mongodb+srv://<username>:<password>@cluster0.xxxxx.mongodb.net/smarter_scheduler?retryWrites=true&w=majority
+   ```
+
+### Step 2: Push to GitHub
+```bash
+git add .
+git commit -m "Add Vercel serverless configuration"
+git push origin <your-branch>
+```
+
+### Step 3: Deploy on Vercel
+1. Log in to [Vercel Dashboard](https://vercel.com).
+2. Click **Add New...** &rarr; **Project**.
+3. Import your GitHub repository (`Smarter_Daily_Scheduler`).
+4. In the **Environment Variables** section, add:
+   - **Key**: `MONGODB_URI`
+   - **Value**: Your MongoDB Atlas connection string from Step 1.
+5. Click **Deploy**!
+6. Vercel will build and assign you a live HTTPS production URL (e.g., `https://smarter-daily-scheduler.vercel.app`).
+
+---
+
 ## 📁 Project Structure
 
 ```

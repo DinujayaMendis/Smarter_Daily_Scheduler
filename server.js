@@ -1,16 +1,18 @@
+require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
 const Task = require('./models/Task');
+const connectDB = require('./lib/db');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/smarter_scheduler';
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Serve static frontend files (local and fallback)
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Default schedule seed data matching the provided image
@@ -161,15 +163,31 @@ async function seedDefaultTasks() {
       console.log('Seeded database with default schedule from image!');
     }
   } catch (err) {
-    console.error('Error seeding tasks:', err);
+    console.warn('Note: Could not seed tasks (DB might not be connected yet):', err.message);
   }
 }
 
+// Serverless Middleware to ensure DB connection on API calls
+app.use('/api', async (req, res, next) => {
+  try {
+    await connectDB();
+  } catch (err) {
+    console.error('API MongoDB connection error:', err.message);
+  }
+  next();
+});
+
 // API Routes
+
+// Health check endpoint
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'ok', time: new Date().toISOString() });
+});
 
 // 1. Get all tasks
 app.get('/api/tasks', async (req, res) => {
   try {
+    await seedDefaultTasks();
     const tasks = await Task.find().sort({ order: 1, createdAt: 1 });
     res.json({ success: true, count: tasks.length, data: tasks });
   } catch (err) {
@@ -312,19 +330,22 @@ app.get('/api/stats', async (req, res) => {
   }
 });
 
-// Start MongoDB and Express Server
-mongoose.connect(MONGODB_URI)
-  .then(async () => {
-    console.log('MongoDB connected successfully on:', MONGODB_URI);
-    await seedDefaultTasks();
-    app.listen(PORT, () => {
-      console.log(`Smarter Daily Scheduler running at http://localhost:${PORT}`);
+// If running directly (e.g. locally node server.js), start HTTP listener
+if (require.main === module) {
+  connectDB()
+    .then(async () => {
+      await seedDefaultTasks();
+      app.listen(PORT, () => {
+        console.log(`Smarter Daily Scheduler running at http://localhost:${PORT}`);
+      });
+    })
+    .catch((err) => {
+      console.warn('Local MongoDB startup failed, starting fallback server:', err.message);
+      app.listen(PORT, () => {
+        console.log(`Server running in fallback mode at http://localhost:${PORT}`);
+      });
     });
-  })
-  .catch((err) => {
-    console.error('Failed to connect to MongoDB:', err.message);
-    // Still start Express server so UI works, with mock data notice if DB is unreachable
-    app.listen(PORT, () => {
-      console.log(`Server running in fallback mode at http://localhost:${PORT}`);
-    });
-  });
+}
+
+// Export Express app for Vercel Serverless Function
+module.exports = app;
